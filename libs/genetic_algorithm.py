@@ -79,7 +79,7 @@ def initialization_greedy(Npop, themes, train_data, W):
     
 #     return pop
 
-def calculateObj(sol, train_data, W, themes, log_scoring = True):
+def calculateObj(sol, train_data, W, themes):
     prediction_scores = []
     temp_pred_scores = []
     for ind, doc_wth in enumerate(W[train_data.index]):
@@ -194,10 +194,10 @@ def elitistUpdate(oldPop, newPop, oldPopObjValues):
     return newPop.copy()
 
 # Returns best solution's index number, best solution's objective value and average objective value of the given population.
-def findBestSolution(pop, train_data, W, themes, log_scoring = True):
+def findBestSolution(pop, train_data, W, themes):
     popObjValues = []
     for p in pop:
-        popObjValues.append(calculateObj(p, train_data, W, themes, log_scoring = True))
+        popObjValues.append(calculateObj(p, train_data, W, themes))
         
     bestObj = popObjValues[0]
     avgObj = bestObj
@@ -358,7 +358,7 @@ def stratify(data, classes, ratios, one_hot=False):
 #     return train_data, test_data
 
 
-def calculateTestScore(sol, test_data, W, themes, log_scoring = True):
+def calculateTestScore(sol, test_data, W, themes):
     all_prediction_scores = []
     for ind, doc_wth in enumerate(W[test_data.index]):
         temp_pred_score = []
@@ -400,7 +400,7 @@ def calculateTestScore(sol, test_data, W, themes, log_scoring = True):
 #     return prediction_scores, all_prediction_scores
 
 
-def run_ga(train_data, W, themes, Npop = 3, Pc = 1.0, Pm = 1.0, stopGeneration = 10, log_scoring = True):
+def run_ga(train_data, W, themes, Npop = 3, Pc = 1.0, Pm = 1.0, stopGeneration = 10, greedyInit = False):
     '''
     Runs GA with the given paramters and returns the solutions
     
@@ -413,7 +413,7 @@ def run_ga(train_data, W, themes, Npop = 3, Pc = 1.0, Pm = 1.0, stopGeneration =
     Pc : Probability of crossover
     Pm : Probability of mutation
     stopGeneration : Stopping number for generation
-    log_scoring : Scoring method for the objective fuction
+    greedyInit: Initialize with greedy approach
     
     Returns:
     ---------
@@ -428,9 +428,12 @@ def run_ga(train_data, W, themes, Npop = 3, Pc = 1.0, Pm = 1.0, stopGeneration =
     t1 = time()
 
     # Creating the initial population
-    population = initialization(Npop, themes)
-    #population = initialization_greedy(Npop, themes, train_data, W)
-    _, _, _, popObjValues = findBestSolution(population, train_data, W, themes, log_scoring = True)
+    if greedyInit:
+        population = initialization_greedy(Npop, themes, train_data, W)
+    else:
+        population = initialization(Npop, themes)
+        
+    _, _, _, popObjValues = findBestSolution(population, train_data, W, themes)
 
     # Run the algorithm for 'stopGeneration' times generation
     for i in range(stopGeneration):
@@ -458,7 +461,7 @@ def run_ga(train_data, W, themes, Npop = 3, Pc = 1.0, Pm = 1.0, stopGeneration =
         # Update the population
         population = elitistUpdate(population, childs, popObjValues)
 
-        bestSol, bestObj, avgObj, popObjValues = findBestSolution(population, train_data, W, themes, log_scoring = True)
+        bestSol, bestObj, avgObj, popObjValues = findBestSolution(population, train_data, W, themes)
         #print(bestSol, bestObj)
         
     return population, population[bestSol], bestSol, bestObj
